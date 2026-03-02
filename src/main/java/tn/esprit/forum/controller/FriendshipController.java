@@ -13,7 +13,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/forums")
-@CrossOrigin(origins = "*")
 public class FriendshipController {
 
     @Autowired

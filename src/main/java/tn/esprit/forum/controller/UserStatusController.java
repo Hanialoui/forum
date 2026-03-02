@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/forums")
-@CrossOrigin(origins = "*")
 public class UserStatusController {
 
     @Autowired
