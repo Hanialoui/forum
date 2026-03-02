@@ -38,6 +38,9 @@ public class Forum {
     // Self-reference for replies
     private Long parentPostId;
 
+    // Shared post reference (Facebook-style share)
+    private Long sharedPostId;
+
     private Integer comments = 0;
 
     private Integer reposts = 0;
@@ -53,7 +56,7 @@ public class Forum {
     }
 
     public Forum(Long id, Long topicId, Long userId, String author, String username, String avatar,
-                 String content, String image, Boolean isEdited, Long parentPostId,
+                 String content, String image, Boolean isEdited, Long parentPostId, Long sharedPostId,
                  Integer comments, Integer reposts, Integer likes,
                  LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
@@ -66,6 +69,7 @@ public class Forum {
         this.image = image;
         this.isEdited = isEdited;
         this.parentPostId = parentPostId;
+        this.sharedPostId = sharedPostId;
         this.comments = comments;
         this.reposts = reposts;
         this.likes = likes;
@@ -166,6 +170,14 @@ public class Forum {
 
     public void setParentPostId(Long parentPostId) {
         this.parentPostId = parentPostId;
+    }
+
+    public Long getSharedPostId() {
+        return sharedPostId;
+    }
+
+    public void setSharedPostId(Long sharedPostId) {
+        this.sharedPostId = sharedPostId;
     }
 
     public Integer getComments() {
