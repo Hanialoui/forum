@@ -53,4 +53,18 @@ public class ChatMessageController {
         chatMessageService.deleteMessage(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/delete-message-for-user/{messageId}/{userId}")
+    public ResponseEntity<ChatMessage> deleteMessageForUser(@PathVariable Long messageId, @PathVariable Long userId) {
+        ChatMessage updated = chatMessageService.deleteMessageForUser(messageId, userId);
+        if (updated == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(updated);
+    }
+
+    @PutMapping("/toggle-reaction/{messageId}/{userId}")
+    public ResponseEntity<ChatMessage> toggleReaction(@PathVariable Long messageId, @PathVariable Long userId, @RequestParam String emoji) {
+        ChatMessage updated = chatMessageService.toggleReaction(messageId, userId, emoji);
+        if (updated == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(updated);
+    }
 }

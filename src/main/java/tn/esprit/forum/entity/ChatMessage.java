@@ -39,6 +39,20 @@ public class ChatMessage {
 
     private Long sharedPostId;
 
+    // Reply support
+    private Long replyToId;
+    @Column(columnDefinition = "TEXT")
+    private String replyToContent;
+    private String replyToSenderName;
+
+    // Reactions (JSON: {"userId:emoji": true})
+    @Column(columnDefinition = "TEXT")
+    private String reactions;
+
+    // Soft delete support
+    @Column(columnDefinition = "TEXT")
+    private String deletedForUsers;
+
     @Builder.Default
     private Boolean isRead = false;
 

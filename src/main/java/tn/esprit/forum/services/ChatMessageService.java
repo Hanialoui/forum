@@ -54,8 +54,42 @@ public class ChatMessageService {
         return chatMessageRepository.findAllMessagesForUser(userId);
     }
 
-    // Delete a message
+    // Delete a message (for everyone)
     public void deleteMessage(Long messageId) {
         chatMessageRepository.deleteById(messageId);
+    }
+
+    // Delete a message for a specific user (soft delete)
+    public ChatMessage deleteMessageForUser(Long messageId, Long userId) {
+        ChatMessage msg = chatMessageRepository.findById(messageId).orElse(null);
+        if (msg == null) return null;
+        String deleted = msg.getDeletedForUsers();
+        if (deleted == null || deleted.isEmpty()) {
+            deleted = userId.toString();
+        } else {
+            deleted = deleted + "," + userId;
+        }
+        msg.setDeletedForUsers(deleted);
+        return chatMessageRepository.save(msg);
+    }
+
+    // Add/toggle reaction on a message
+    public ChatMessage toggleReaction(Long messageId, Long userId, String emoji) {
+        ChatMessage msg = chatMessageRepository.findById(messageId).orElse(null);
+        if (msg == null) return null;
+        String key = userId + ":" + emoji;
+        String reactions = msg.getReactions();
+        if (reactions == null || reactions.isEmpty()) {
+            reactions = key;
+        } else if (reactions.contains(key)) {
+            // Remove reaction
+            reactions = reactions.replace(key, "").replace(",,", ",");
+            if (reactions.startsWith(",")) reactions = reactions.substring(1);
+            if (reactions.endsWith(",")) reactions = reactions.substring(0, reactions.length() - 1);
+        } else {
+            reactions = reactions + "," + key;
+        }
+        msg.setReactions(reactions.isEmpty() ? null : reactions);
+        return chatMessageRepository.save(msg);
     }
 }
