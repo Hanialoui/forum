@@ -56,6 +56,18 @@ public class ChatMessage {
     @Builder.Default
     private Boolean isRead = false;
 
+    private LocalDateTime readAt;
+
+    // Voice message support
+    @Column(columnDefinition = "TEXT")
+    private String voiceUrl;
+    private Integer voiceDuration; // duration in seconds
+
+    // Forwarding support
+    @Builder.Default
+    private Boolean isForwarded = false;
+    private String forwardedFromName;
+
     private LocalDateTime createdAt;
 
     @PrePersist

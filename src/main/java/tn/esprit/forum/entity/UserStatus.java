@@ -24,6 +24,10 @@ public class UserStatus {
 
     private LocalDateTime lastSeen;
 
+    // Typing indicator
+    private Long typingToUserId;
+    private LocalDateTime typingStartedAt;
+
     @PrePersist
     protected void onCreate() {
         this.lastSeen = LocalDateTime.now();

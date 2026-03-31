@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import tn.esprit.forum.entity.ChatMessage;
 import tn.esprit.forum.repository.ChatMessageRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -39,6 +40,7 @@ public class ChatMessageService {
         for (ChatMessage msg : messages) {
             if (msg.getReceiverId().equals(receiverId) && !msg.getIsRead()) {
                 msg.setIsRead(true);
+                msg.setReadAt(LocalDateTime.now());
                 chatMessageRepository.save(msg);
             }
         }

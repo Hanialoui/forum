@@ -89,4 +89,24 @@ public class FriendshipController {
                     .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Failed to block user"));
         }
     }
+
+    @PutMapping("/unblock-user/{id}")
+    public ResponseEntity<?> unblockUser(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(friendshipService.unblockUser(id));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Failed to unblock user"));
+        }
+    }
+
+    @GetMapping("/get-blocked-users/{userId}")
+    public ResponseEntity<List<Friendship>> getBlockedUsers(@PathVariable Long userId) {
+        return ResponseEntity.ok(friendshipService.getBlockedUsers(userId));
+    }
+
+    @GetMapping("/get-mutual-friends-count/{userId1}/{userId2}")
+    public ResponseEntity<Map<String, Integer>> getMutualFriendsCount(@PathVariable Long userId1, @PathVariable Long userId2) {
+        return ResponseEntity.ok(Map.of("count", friendshipService.getMutualFriendsCount(userId1, userId2)));
+    }
 }

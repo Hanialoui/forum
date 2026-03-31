@@ -43,6 +43,12 @@ public class ChatMessageController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/get-last-message/{userId1}/{userId2}")
+    public ResponseEntity<ChatMessage> getLastMessage(@PathVariable Long userId1, @PathVariable Long userId2) {
+        ChatMessage msg = chatMessageService.getLastMessage(userId1, userId2);
+        return msg != null ? ResponseEntity.ok(msg) : ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/get-all-messages/{userId}")
     public ResponseEntity<List<ChatMessage>> getAllMessages(@PathVariable Long userId) {
         return ResponseEntity.ok(chatMessageService.getAllMessagesForUser(userId));

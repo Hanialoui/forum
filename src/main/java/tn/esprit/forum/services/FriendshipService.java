@@ -85,4 +85,33 @@ public class FriendshipService {
         f.setStatus(FriendshipStatus.BLOCKED);
         return friendshipRepository.save(f);
     }
+
+    // Unblock user
+    public Friendship unblockUser(Long friendshipId) {
+        Friendship f = friendshipRepository.findById(friendshipId)
+                .orElseThrow(() -> new RuntimeException("Friendship not found"));
+        f.setStatus(FriendshipStatus.ACCEPTED);
+        return friendshipRepository.save(f);
+    }
+
+    // Get blocked users
+    public List<Friendship> getBlockedUsers(Long userId) {
+        return friendshipRepository.findByUserAndStatus(userId, FriendshipStatus.BLOCKED);
+    }
+
+    // Get mutual friends count between two users
+    public int getMutualFriendsCount(Long userId1, Long userId2) {
+        List<Friendship> friends1 = friendshipRepository.findAcceptedFriends(userId1);
+        List<Friendship> friends2 = friendshipRepository.findAcceptedFriends(userId2);
+        java.util.Set<Long> friendIds1 = new java.util.HashSet<>();
+        for (Friendship f : friends1) {
+            friendIds1.add(f.getUserId().equals(userId1) ? f.getFriendId() : f.getUserId());
+        }
+        int count = 0;
+        for (Friendship f : friends2) {
+            Long fId = f.getUserId().equals(userId2) ? f.getFriendId() : f.getUserId();
+            if (friendIds1.contains(fId)) count++;
+        }
+        return count;
+    }
 }

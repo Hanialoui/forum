@@ -57,4 +57,47 @@ public class UserStatusService {
     public List<UserStatus> getOnlineUsers() {
         return userStatusRepository.findOnlineUsers();
     }
+
+    // Set typing indicator
+    public UserStatus setTyping(Long userId, Long typingToUserId) {
+        Optional<UserStatus> existing = userStatusRepository.findById(userId);
+        if (existing.isPresent()) {
+            UserStatus s = existing.get();
+            s.setTypingToUserId(typingToUserId);
+            s.setTypingStartedAt(LocalDateTime.now());
+            return userStatusRepository.save(s);
+        }
+        return null;
+    }
+
+    // Clear typing indicator
+    public UserStatus clearTyping(Long userId) {
+        Optional<UserStatus> existing = userStatusRepository.findById(userId);
+        if (existing.isPresent()) {
+            UserStatus s = existing.get();
+            s.setTypingToUserId(null);
+            s.setTypingStartedAt(null);
+            return userStatusRepository.save(s);
+        }
+        return null;
+    }
+
+    // Check if a user is typing to another user
+    public boolean isTypingTo(Long typerId, Long receiverId) {
+        Optional<UserStatus> existing = userStatusRepository.findById(typerId);
+        if (existing.isPresent()) {
+            UserStatus s = existing.get();
+            if (s.getTypingToUserId() != null && s.getTypingToUserId().equals(receiverId)) {
+                // Auto-expire typing after 5 seconds
+                if (s.getTypingStartedAt() != null && s.getTypingStartedAt().isAfter(LocalDateTime.now().minusSeconds(5))) {
+                    return true;
+                }
+                // Expired, clear it
+                s.setTypingToUserId(null);
+                s.setTypingStartedAt(null);
+                userStatusRepository.save(s);
+            }
+        }
+        return false;
+    }
 }
