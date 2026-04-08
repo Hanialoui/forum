@@ -58,11 +58,6 @@ public class ChatMessage {
 
     private LocalDateTime readAt;
 
-    // Voice message support
-    @Column(columnDefinition = "TEXT")
-    private String voiceUrl;
-    private Integer voiceDuration; // duration in seconds
-
     // Forwarding support
     @Builder.Default
     private Boolean isForwarded = false;
@@ -73,5 +68,8 @@ public class ChatMessage {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        if (this.messageType == null) this.messageType = MessageType.TEXT;
+        if (this.isRead == null) this.isRead = false;
+        if (this.isForwarded == null) this.isForwarded = false;
     }
 }

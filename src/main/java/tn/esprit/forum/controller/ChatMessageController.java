@@ -1,6 +1,7 @@
 package tn.esprit.forum.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.forum.entity.ChatMessage;
@@ -17,8 +18,14 @@ public class ChatMessageController {
     private ChatMessageService chatMessageService;
 
     @PostMapping("/send-message")
-    public ResponseEntity<ChatMessage> sendMessage(@RequestBody ChatMessage message) {
-        return ResponseEntity.ok(chatMessageService.sendMessage(message));
+    public ResponseEntity<?> sendMessage(@RequestBody ChatMessage message) {
+        try {
+            return ResponseEntity.ok(chatMessageService.sendMessage(message));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Unknown error"));
+        }
     }
 
     @GetMapping("/get-conversation/{userId1}/{userId2}")

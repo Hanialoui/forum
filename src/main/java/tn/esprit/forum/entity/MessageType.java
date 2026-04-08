@@ -5,6 +5,5 @@ public enum MessageType {
     IMAGE,
     GIF,
     EMOJI,
-    SHARED_POST,
-    VOICE
+    SHARED_POST
 }
