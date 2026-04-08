@@ -153,68 +153,6 @@ public class ForumEmailService {
         sendHtmlEmail(toEmail, safeAuthorName + " mentioned you in a post \u2014 MiNoLingo", html);
     }
 
-    // ── AI Content Moderation Warning ──
-    public void sendContentWarningEmail(String toEmail, String userName, String blockedContent,
-                                         String category, String aiExplanation, int offenseNumber) {
-        String truncatedContent = blockedContent != null && blockedContent.length() > 150
-                ? blockedContent.substring(0, 150) + "..."
-                : (blockedContent != null ? blockedContent : "N/A");
-
-        String safeUserName = escapeHtml(userName != null ? userName : "User");
-        String safeCategory = escapeHtml(category != null ? category : "Inappropriate Content");
-        String safeContent = escapeHtml(truncatedContent);
-        String safeExplanation = escapeHtml(aiExplanation != null ? aiExplanation : "Your content was flagged as inappropriate.");
-
-        String severityBadge;
-        if (offenseNumber >= 3) {
-            severityBadge = "<span style=\"display:inline-block;background:#ffebee;color:#c62828;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;\">FINAL WARNING</span>";
-        } else {
-            severityBadge = "<span style=\"display:inline-block;background:#fff3e0;color:#f57c00;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;\">WARNING #" + offenseNumber + "</span>";
-        }
-
-        String html = buildEmailWrapper(
-            "Community Guidelines Violation",
-            "Your recent post has been blocked",
-            "<p style=\"font-size:16px;color:#1a1a2e;margin:0 0 20px 0;\">Hello <strong>" + safeUserName + "</strong>,</p>" +
-            "<p style=\"font-size:14px;color:#444;line-height:1.7;margin:0 0 24px 0;\">Our AI moderation system has detected that your recent post violates our community guidelines. To keep MiNoLingo a safe and positive environment for all learners, the post has been blocked.</p>" +
-
-            "<div style=\"background:#fff8f8;border-radius:12px;padding:20px 24px;margin:0 0 24px 0;border-left:4px solid #e53935;\">" +
-            "  <p style=\"font-size:13px;font-weight:700;color:#e53935;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 14px 0;\">Violation Details</p>" +
-            "  <table style=\"width:100%;border-collapse:collapse;\">" +
-            "    <tr><td style=\"padding:6px 0;font-size:13px;color:#888;width:130px;\">Category</td><td style=\"padding:6px 0;font-size:13px;color:#1a1a2e;font-weight:600;\">" + safeCategory + "</td></tr>" +
-            "    <tr><td style=\"padding:6px 0;font-size:13px;color:#888;\">Severity</td><td style=\"padding:6px 0;\">" + severityBadge + "</td></tr>" +
-            "    <tr><td style=\"padding:6px 0;font-size:13px;color:#888;vertical-align:top;\">Blocked Content</td><td style=\"padding:6px 0;font-size:13px;color:#666;font-style:italic;\">\"" + safeContent + "\"</td></tr>" +
-            "  </table>" +
-            "</div>" +
-
-            "<div style=\"background:#f8f9fb;border-radius:12px;padding:20px 24px;margin:0 0 24px 0;border-left:4px solid #38a9f3;\">" +
-            "  <p style=\"font-size:13px;font-weight:700;color:#38a9f3;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 10px 0;\">Why was this blocked?</p>" +
-            "  <p style=\"font-size:14px;color:#333;margin:0;line-height:1.6;\">" + safeExplanation + "</p>" +
-            "</div>" +
-
-            (offenseNumber >= 3
-                ? "<div style=\"background:#ffebee;border-radius:12px;padding:16px 24px;margin:0 0 24px 0;\">" +
-                  "  <p style=\"font-size:14px;color:#c62828;font-weight:700;margin:0;\">⚠️ This is your " + offenseNumber + getOrdinalSuffix(offenseNumber) + " violation. Continued violations may result in account restrictions.</p>" +
-                  "</div>"
-                : "<p style=\"font-size:14px;color:#444;line-height:1.7;margin:0 0 24px 0;\">This is your <strong>" + offenseNumber + getOrdinalSuffix(offenseNumber) + " warning</strong>. Please review our community guidelines to avoid further action.</p>"
-            ) +
-
-            buildButton("Review Community Guidelines", frontendUrl + "/forums")
-        );
-
-        sendHtmlEmail(toEmail, "⚠️ Community Guidelines Warning — MiNoLingo", html);
-    }
-
-    private String getOrdinalSuffix(int n) {
-        if (n >= 11 && n <= 13) return "th";
-        return switch (n % 10) {
-            case 1 -> "st";
-            case 2 -> "nd";
-            case 3 -> "rd";
-            default -> "th";
-        };
-    }
-
     // ══════════════════════════════════════════════
     // HTML Email Infrastructure
     // ══════════════════════════════════════════════
