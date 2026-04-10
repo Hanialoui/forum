@@ -71,6 +71,11 @@ public class ForumController {
         return ResponseEntity.ok(forumService.likePost(id));
     }
 
+    @PutMapping("/unlike-forum/{id}")
+    public ResponseEntity<Forum> unlikePost(@PathVariable Long id) {
+        return ResponseEntity.ok(forumService.unlikePost(id));
+    }
+
     @PutMapping("/repost-forum/{id}")
     public ResponseEntity<Forum> repostPost(@PathVariable Long id) {
         return ResponseEntity.ok(forumService.repostPost(id));

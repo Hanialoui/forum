@@ -74,6 +74,12 @@ public class ForumService {
         return forumRepository.save(post);
     }
 
+    public Forum unlikePost(Long id) {
+        Forum post = getPostById(id);
+        post.setLikes(Math.max(0, post.getLikes() - 1));
+        return forumRepository.save(post);
+    }
+
     public Forum repostPost(Long id) {
         Forum post = getPostById(id);
         post.setReposts(post.getReposts() + 1);
