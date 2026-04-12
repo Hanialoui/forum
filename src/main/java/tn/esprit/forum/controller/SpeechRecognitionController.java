@@ -33,7 +33,7 @@ public class SpeechRecognitionController {
                 
                 if (scriptStream == null) {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(Map.of("success", false, "text": "", "error", "Python script not found in resources"));
+                            .body(Map.of("success", false, "text", "", "error", "Python script not found in resources"));
                 }
 
                 tempPythonScript = Files.createTempFile("speech_recognition_", ".py");
@@ -98,7 +98,7 @@ public class SpeechRecognitionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of(
                             "success", false,
-                            "text": "",
+                            "text", "",
                             "error", "Failed to transcribe audio: " + e.getMessage()
                     ));
         }
@@ -138,12 +138,12 @@ public class SpeechRecognitionController {
             if (pythonScriptPath != null) {
                 return ResponseEntity.ok(Map.of(
                         "status", "healthy",
-                        "service": "speech-recognition",
+                        "service", "speech-recognition",
                         "python_script", pythonScriptPath
                 ));
             } else {
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                        .body(Map.of("status", "unhealthy", "error": "Python script not found"));
+                        .body(Map.of("status", "unhealthy", "error", "Python script not found"));
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
