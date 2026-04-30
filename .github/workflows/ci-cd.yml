@@ -1,0 +1,70 @@
+name: CI/CD Pipeline
+on:
+  push:
+    branches:
+      - main
+env:
+  DOCKER_IMAGE: henialoui/minolingo-forum
+  CONTAINER_NAME: minolingo-forum-app
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # ─── Checkout ───────────────────────────────────────────────
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      # ─── Java Setup ─────────────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      # ─── Build ──────────────────────────────────────────────────
+      - name: Build
+        run: mvn clean compile -DskipTests
+      # ─── Package ────────────────────────────────────────────────
+      - name: Package
+        run: mvn package -DskipTests -B
+      # ─── SonarQube Analysis ─────────────────────────────────────
+      - name: SonarQube Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.projectKey=minolingo-forum \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+      # ─── Docker Build & Push ────────────────────────────────────
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ env.DOCKER_IMAGE }}:${{ github.run_number }} \
+            -t ${{ env.DOCKER_IMAGE }}:latest \
+            .
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.DOCKER_IMAGE }}:${{ github.run_number }}
+          docker push ${{ env.DOCKER_IMAGE }}:latest
+      # ─── Deploy ─────────────────────────────────────────────────
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
+          script: |
+            docker pull ${{ env.DOCKER_IMAGE }}:${{ github.run_number }}
+            docker stop ${{ env.CONTAINER_NAME }} || true
+            docker rm ${{ env.CONTAINER_NAME }} || true
+            docker run -d \
+              --name ${{ env.CONTAINER_NAME }} \
+              --network devops-net \
+              -p 8082:8080 \
+              ${{ env.DOCKER_IMAGE }}:${{ github.run_number }}
