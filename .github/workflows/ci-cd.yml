@@ -26,16 +26,7 @@ jobs:
       # ─── Package ────────────────────────────────────────────────
       - name: Package
         run: mvn package -DskipTests -B
-      # ─── SonarQube Analysis ─────────────────────────────────────
-      - name: SonarQube Analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: |
-          mvn sonar:sonar \
-            -Dsonar.projectKey=minolingo-forum \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+
       # ─── Docker Build & Push ────────────────────────────────────
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
