@@ -29,10 +29,7 @@ jobs:
         run: mvn clean compile -DskipTests
 
       - name: Run Tests
-        run: mvn test
-        env:
-          SPRING_DATA_REDIS_HOST: localhost
-          SPRING_DATA_REDIS_PORT: 6379
+        run: mvn test -Dspring.cache.type=none -Dspring.data.redis.host=localhost -Dspring.data.redis.port=6379
 
       - name: Generate JaCoCo Report
         run: mvn jacoco:report
