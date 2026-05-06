@@ -1,6 +1,7 @@
 package tn.esprit.forum.entity;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +14,8 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_parent", columnList = "parentPostId")
         }
 )
-public class Forum {
+public class Forum implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

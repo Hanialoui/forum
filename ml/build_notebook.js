@@ -22,10 +22,11 @@ cells.push(md(
   '',
   '**Data science goal (binary classification):** predict whether a given (student, forum post) pair will lead to engagement (`engaged = 1`) or not (`engaged = 0`).',
   '',
-  '**Models compared (linear / bagging / boosting):**',
+  '**Models compared (linear / bagging / boosting / neural):**',
   '1. **Logistic Regression** — linear baseline, fully interpretable.',
   '2. **Random Forest** — bagging ensemble, robust to outliers, gives feature importance.',
   '3. **XGBoost** — gradient boosting, industry standard for tabular data.',
+  '4. **Artificial Neural Network (ANN)** — Multi-Layer Perceptron built with Keras. Uses Dense layers, ReLU activation, sigmoid output, Binary Cross-Entropy loss, and the Adam optimizer (adaptive learning rate). Trained with forward propagation + backpropagation (chain rule).',
   '',
   '**Notebook plan:**',
   '1. Imports & load data',
@@ -37,15 +38,16 @@ cells.push(md(
   '7. Model 1 — Logistic Regression',
   '8. Model 2 — Random Forest',
   '9. Model 3 — XGBoost',
-  '10. Side-by-side comparison',
-  '11. Cross-validation',
-  '12. Save best model'
+  '10. Model 4 — Artificial Neural Network (Keras / TensorFlow)',
+  '11. Side-by-side comparison',
+  '12. Cross-validation',
+  '13. Save best model'
 ));
 
 cells.push(md('## 0. Install (only run once)'));
 cells.push(py(
   '# Uncomment if running in a fresh environment',
-  '# !pip install pandas numpy scikit-learn matplotlib seaborn joblib xgboost'
+  '# !pip install pandas numpy scikit-learn matplotlib seaborn joblib xgboost tensorflow'
 ));
 
 cells.push(md('## 1. Imports'));
@@ -63,6 +65,13 @@ cells.push(py(
   'from sklearn.linear_model import LogisticRegression',
   'from sklearn.ensemble import RandomForestClassifier',
   'from xgboost import XGBClassifier',
+  '',
+  '# ANN (course chapter 6)',
+  'import tensorflow as tf',
+  'from tensorflow.keras.models import Sequential',
+  'from tensorflow.keras.layers import Dense, Dropout, Input',
+  'from tensorflow.keras.optimizers import Adam',
+  'from tensorflow.keras.callbacks import EarlyStopping',
   'from sklearn.metrics import (',
   '    accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,',
   '    classification_report, confusion_matrix, roc_curve, ConfusionMatrixDisplay,',
@@ -473,7 +482,123 @@ cells.push(py(
   'plt.show()'
 ));
 
-cells.push(md('## 10. Side-by-side comparison'));
+cells.push(md('## 10. Model 4 — Artificial Neural Network (ANN)',
+  '',
+  '### Principe (rappel du chapitre 6 — Les réseaux de neurones)',
+  '',
+  'Un **réseau de neurones** est un empilement de couches de neurones (perceptrons) qui apprennent ensemble.',
+  '',
+  '**Le perceptron — Forward Propagation**',
+  '$$\\hat{y} = g\\!\\left(w_0 + \\sum_{i=1}^{m} x_i \\, w_i\\right)$$',
+  '- **Inputs** $x_1, \\dots, x_m$ — nos features (ici ~30 colonnes après l\\u2019encodage).',
+  '- **Weights** $w_i$ — appris par le réseau ; $w_0$ est le **biais**.',
+  '- **Sum** $z = w_0 + X^T W$ — combinaison linéaire des entrées.',
+  '- **Non-linearity** $g(z)$ — fonction d\\u2019activation. Sans elle, peu importe le nombre de couches, le modèle reste linéaire (cf. slide *Importance of Activation Functions*).',
+  '- **Output** $\\hat{y}$.',
+  '',
+  '**Architecture utilisée — Deep Neural Network (multi-couches Dense)**',
+  '- **Input layer** — un neurone par feature.',
+  '- **Hidden layer 1** — 64 neurones, activation **ReLU** ($g(z) = \\max(0, z)$).',
+  '- **Hidden layer 2** — 32 neurones, activation **ReLU**.',
+  '- **Output layer** — 1 neurone, activation **sigmoïde** (sortie = probabilité d\\u2019engagement entre 0 et 1).',
+  '',
+  'Comme tous les inputs sont connectés à tous les neurones de la couche suivante, ce sont des **couches Dense** (densément connectées).',
+  '',
+  '### Apprentissage — Loss + Gradient Descent + Backpropagation',
+  '',
+  '1. **Quantifying Loss — Binary Cross-Entropy** (problème de classification binaire) :',
+  '$$J(W) = -\\frac{1}{n} \\sum_{i=1}^{n} \\Big[ y^{(i)} \\log f(x^{(i)};W) + (1-y^{(i)}) \\log (1 - f(x^{(i)};W)) \\Big]$$',
+  '',
+  '2. **Gradient Descent — algorithme du chapitre :**',
+  '   1. Initialiser les poids aléatoirement $W \\sim \\mathcal{N}(0, \\sigma^2)$.',
+  '   2. Calculer le gradient $\\partial J(W) / \\partial W$ par **backpropagation** (règle de la chaîne).',
+  '   3. Mettre à jour : $W \\leftarrow W - \\eta \\, \\partial J(W)/\\partial W$.',
+  '   4. Répéter jusqu\\u2019à convergence.',
+  '',
+  '3. **Adaptive Learning Rate — Adam :** au lieu d\\u2019un $\\eta$ fixe (qui converge mal — cf. slides *Setting the Learning Rate*), Adam adapte $\\eta$ par poids selon la taille du gradient. C\\u2019est l\\u2019optimiseur recommandé par le cours.',
+  '',
+  '4. **Dropout & EarlyStopping** — régularisations : Dropout désactive aléatoirement des neurones pour éviter le sur-apprentissage ; EarlyStopping arrête l\\u2019entraînement quand la perte de validation cesse de baisser.',
+  '',
+  '> Comme la régression logistique, un ANN exige des features **standardisées** : on réutilise `X_train_scaled` / `X_test_scaled`.'
+));
+
+cells.push(py(
+  '# Reproductibilité',
+  'tf.random.set_seed(RANDOM_STATE)',
+  'np.random.seed(RANDOM_STATE)',
+  '',
+  'n_features = X_train_scaled.shape[1]',
+  '',
+  '# Construction du Multi-Layer Perceptron (Sequential = empilement de couches)',
+  'ann = Sequential([',
+  '    Input(shape=(n_features,)),                # Couche d\'entrée',
+  '    Dense(64, activation="relu"),               # Hidden layer 1 (ReLU)',
+  '    Dropout(0.3),                                # Régularisation',
+  '    Dense(32, activation="relu"),               # Hidden layer 2 (ReLU)',
+  '    Dropout(0.2),',
+  '    Dense(1,  activation="sigmoid"),             # Sortie binaire (probabilité)',
+  '])',
+  '',
+  '# Compilation : loss = Binary Cross-Entropy, optimiseur = Adam (adaptive LR)',
+  'ann.compile(',
+  '    optimizer=Adam(learning_rate=1e-3),',
+  '    loss="binary_crossentropy",',
+  '    metrics=["accuracy"],',
+  ')',
+  'ann.summary()'
+));
+
+cells.push(py(
+  '# Entraînement par gradient descent + backpropagation, sur plusieurs epochs',
+  'es = EarlyStopping(monitor="val_loss", patience=8, restore_best_weights=True)',
+  '',
+  'history = ann.fit(',
+  '    X_train_scaled, y_train,',
+  '    validation_split=0.15,',
+  '    epochs=80,',
+  '    batch_size=64,',
+  '    callbacks=[es],',
+  '    verbose=0,',
+  ')',
+  'print(f"Entraînement arrêté après {len(history.history[\'loss\'])} epoch(s)")'
+));
+
+cells.push(py(
+  '# Courbes d\'apprentissage : la loss doit baisser, l\'accuracy doit monter',
+  'fig, ax = plt.subplots(1, 2, figsize=(12, 4))',
+  'ax[0].plot(history.history["loss"], label="train")',
+  'ax[0].plot(history.history["val_loss"], label="val")',
+  'ax[0].set_title("Loss (Binary Cross-Entropy)")',
+  'ax[0].set_xlabel("Epoch"); ax[0].legend()',
+  '',
+  'ax[1].plot(history.history["accuracy"], label="train")',
+  'ax[1].plot(history.history["val_accuracy"], label="val")',
+  'ax[1].set_title("Accuracy")',
+  'ax[1].set_xlabel("Epoch"); ax[1].legend()',
+  '',
+  'plt.suptitle("Apprentissage du réseau de neurones")',
+  'plt.tight_layout(); plt.show()'
+));
+
+cells.push(py(
+  '# Évaluation sur le jeu de test',
+  'y_proba_ann = ann.predict(X_test_scaled, verbose=0).ravel()',
+  'y_pred_ann  = (y_proba_ann >= 0.5).astype(int)',
+  '',
+  'print(classification_report(y_test, y_pred_ann, target_names=["Not engaged", "Engaged"]))',
+  'print("ROC-AUC:", round(roc_auc_score(y_test, y_proba_ann), 4))'
+));
+
+cells.push(py(
+  'ConfusionMatrixDisplay(',
+  '    confusion_matrix(y_test, y_pred_ann),',
+  '    display_labels=["Not engaged", "Engaged"],',
+  ').plot(cmap="Purples")',
+  'plt.title("ANN — Confusion Matrix")',
+  'plt.show()'
+));
+
+cells.push(md('## 11. Side-by-side comparison'));
 cells.push(py(
   'def metrics(y_true, y_pred, y_proba):',
   '    return {',
@@ -488,6 +613,7 @@ cells.push(py(
   '    "Logistic Regression": metrics(y_test, y_pred_lr,  y_proba_lr),',
   '    "Random Forest":       metrics(y_test, y_pred_rf,  y_proba_rf),',
   '    "XGBoost":             metrics(y_test, y_pred_xgb, y_proba_xgb),',
+  '    "ANN (Keras)":         metrics(y_test, y_pred_ann, y_proba_ann),',
   '})',
   'results.round(4)'
 ));
@@ -496,11 +622,13 @@ cells.push(py(
   'fpr_lr,  tpr_lr,  _ = roc_curve(y_test, y_proba_lr)',
   'fpr_rf,  tpr_rf,  _ = roc_curve(y_test, y_proba_rf)',
   'fpr_xgb, tpr_xgb, _ = roc_curve(y_test, y_proba_xgb)',
+  'fpr_ann, tpr_ann, _ = roc_curve(y_test, y_proba_ann)',
   '',
   'plt.figure(figsize=(7, 6))',
   'plt.plot(fpr_lr,  tpr_lr,  label=f"Logistic Regression  (AUC = {roc_auc_score(y_test, y_proba_lr):.3f})")',
   'plt.plot(fpr_rf,  tpr_rf,  label=f"Random Forest        (AUC = {roc_auc_score(y_test, y_proba_rf):.3f})")',
   'plt.plot(fpr_xgb, tpr_xgb, label=f"XGBoost              (AUC = {roc_auc_score(y_test, y_proba_xgb):.3f})")',
+  'plt.plot(fpr_ann, tpr_ann, label=f"ANN                  (AUC = {roc_auc_score(y_test, y_proba_ann):.3f})")',
   'plt.plot([0, 1], [0, 1], "--", color="gray")',
   'plt.xlabel("False Positive Rate"); plt.ylabel("True Positive Rate")',
   'plt.title("ROC curves")',
@@ -508,7 +636,9 @@ cells.push(py(
   'plt.show()'
 ));
 
-cells.push(md('## 11. Cross-validation (stratified 5-fold ROC-AUC)'));
+cells.push(md('## 12. Cross-validation (stratified 5-fold ROC-AUC)',
+  '',
+  '> L\\u2019ANN n\\u2019est pas inclus dans cette boucle k-fold : chaque pli demanderait un entraînement complet du réseau (long). On conserve son score sur le jeu de test mis de côté en §10. Les trois autres modèles sont peu coûteux à ré-entraîner.'));
 cells.push(py(
   'cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)',
   '',
@@ -519,35 +649,48 @@ cells.push(py(
   '',
   'print(f"Logistic Regression  CV ROC-AUC: {cv_lr.mean():.4f}  +/- {cv_lr.std():.4f}")',
   'print(f"Random Forest        CV ROC-AUC: {cv_rf.mean():.4f}  +/- {cv_rf.std():.4f}")',
-  'print(f"XGBoost              CV ROC-AUC: {cv_xgb.mean():.4f} +/- {cv_xgb.std():.4f}")'
+  'print(f"XGBoost              CV ROC-AUC: {cv_xgb.mean():.4f} +/- {cv_xgb.std():.4f}")',
+  'print(f"ANN (hold-out only)     ROC-AUC: {roc_auc_score(y_test, y_proba_ann):.4f}")'
 ));
 
-cells.push(md('## 12. Save the best model'));
-cells.push(py(
-  'cv_means = {"logistic_regression": cv_lr.mean(),',
-  '            "random_forest":       cv_rf.mean(),',
-  '            "xgboost":             cv_xgb.mean()}',
-  'best_name = max(cv_means, key=cv_means.get)',
-  'model_map = {"logistic_regression": lr, "random_forest": rf, "xgboost": xgb}',
-  'best_model = model_map[best_name]',
+cells.push(md('## 13. Save the best model',
   '',
-  'bundle = {',
-  '    "model": best_model,',
-  '    "features": list(X.columns),',
-  '    "scaler": scaler if best_name == "logistic_regression" else None,',
+  'Les modèles sklearn / XGBoost sont sérialisés avec **joblib**. Les modèles Keras se sauvegardent dans le format natif `.keras`.'));
+cells.push(py(
+  '# Comparaison : moyenne CV pour les 3 modèles sklearn, hold-out pour l\'ANN',
+  'scores = {',
+  '    "logistic_regression": cv_lr.mean(),',
+  '    "random_forest":       cv_rf.mean(),',
+  '    "xgboost":             cv_xgb.mean(),',
+  '    "ann":                 roc_auc_score(y_test, y_proba_ann),',
   '}',
-  'out = f"best_model_{best_name}.joblib"',
-  'joblib.dump(bundle, out)',
-  'print(f"Best model: {best_name}  (CV ROC-AUC = {cv_means[best_name]:.4f})")',
-  'print("Saved:", out)'
+  'best_name = max(scores, key=scores.get)',
+  'print(f"Meilleur modèle : {best_name}  (ROC-AUC = {scores[best_name]:.4f})")',
+  '',
+  'if best_name == "ann":',
+  '    ann.save("best_model_ann.keras")',
+  '    joblib.dump({"features": list(X.columns), "scaler": scaler},',
+  '                "best_model_ann_meta.joblib")',
+  '    print("Sauvé : best_model_ann.keras  +  best_model_ann_meta.joblib")',
+  'else:',
+  '    model_map = {"logistic_regression": lr, "random_forest": rf, "xgboost": xgb}',
+  '    bundle = {',
+  '        "model": model_map[best_name],',
+  '        "features": list(X.columns),',
+  '        "scaler": scaler if best_name == "logistic_regression" else None,',
+  '    }',
+  '    out = f"best_model_{best_name}.joblib"',
+  '    joblib.dump(bundle, out)',
+  '    print("Sauvé :", out)'
 ));
 
 cells.push(md(
-  '## 13. Conclusions (fill in after running)',
+  '## 14. Conclusions (à remplir après exécution)',
   '',
-  '- Which model won on test ROC-AUC and CV ROC-AUC?',
-  '- What were the top features driving engagement (XGBoost / RF importances and LR coefficients)?',
-  '- Business interpretation: how would you turn these features into a recommendation rule?'
+  '- Quel modèle gagne sur le ROC-AUC (CV pour sklearn / XGBoost, hold-out pour l\\u2019ANN) ?',
+  '- **ANN vs XGBoost** : sur ces données tabulaires de taille modeste (~10k lignes), XGBoost gagne souvent. L\\u2019ANN brille surtout sur les très gros volumes ou les données non structurées (image, texte). Que constatez-vous ?',
+  '- Top features (importances XGBoost / Random Forest et coefficients LR).',
+  '- Interprétation business : comment transformer ces features en règle de recommandation ?'
 ));
 
 const notebook = {
