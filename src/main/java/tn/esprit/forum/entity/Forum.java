@@ -2,6 +2,7 @@ package tn.esprit.forum.entity;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
+import java.io.Serializable;
 
 import java.time.LocalDateTime;
 
