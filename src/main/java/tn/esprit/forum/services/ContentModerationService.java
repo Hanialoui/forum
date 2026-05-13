@@ -79,7 +79,6 @@ public class ContentModerationService {
                 JsonNode root = objectMapper.readTree(response.body());
                 String aiContent = root.path("message").path("content").asText("");
 
-                // Try to parse as JSON
                 int jsonStart = aiContent.indexOf('{');
                 int jsonEnd = aiContent.lastIndexOf('}');
                 if (jsonStart >= 0 && jsonEnd > jsonStart) {
@@ -87,18 +86,24 @@ public class ContentModerationService {
                     JsonNode aiResponse = objectMapper.readTree(jsonStr);
                     result.put("isSafe", aiResponse.path("isSafe").asBoolean(true));
                     result.put("reason", aiResponse.path("reason").asText(""));
+                    result.put("aiAvailable", true);
                 } else {
+                    // AI replied but the JSON was unparseable — treat as available + safe
                     result.put("isSafe", true);
                     result.put("reason", "");
+                    result.put("aiAvailable", true);
                 }
             } else {
+                System.err.println("[ContentModeration] Ollama returned status " + response.statusCode());
                 result.put("isSafe", true);
-                result.put("reason", "");
+                result.put("reason", "AI moderation service returned an error");
+                result.put("aiAvailable", false);
             }
         } catch (Exception e) {
             System.err.println("[ContentModeration] Error: " + e.getMessage());
             result.put("isSafe", true);
-            result.put("reason", "");
+            result.put("reason", "AI moderation service is unreachable");
+            result.put("aiAvailable", false);
         }
 
         return result;
